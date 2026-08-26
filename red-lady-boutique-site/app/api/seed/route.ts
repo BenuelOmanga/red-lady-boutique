@@ -160,7 +160,7 @@ export async function GET() {
               colorHex: c.hex,
               size,
               sku: `${p.sku}-${c.name.slice(0, 3).toUpperCase()}-${size}`,
-              stock: (p.stock as Record<string, number>)[`${c.name}|${size}`] ?? 0,
+              stock: (p.stock as unknown as Record<string, number>)[`${c.name}|${size}`] ?? 0,
               lowStockThreshold: 5,
             }))
           ),
