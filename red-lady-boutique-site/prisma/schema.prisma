@@ -1,0 +1,78 @@
+// This is a deliberately trimmed-down schema — just enough to run a real,
+// working storefront and admin inventory view against a real database.
+// It does not yet include accounts, real orders, or payments; see
+// README.md for what to add next once this is live.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  slug     String    @unique
+  products Product[]
+}
+
+model Product {
+  id             String   @id @default(cuid())
+  title          String
+  slug           String   @unique
+  description    String
+  price          Decimal  @db.Decimal(10, 2)
+  compareAtPrice Decimal? @db.Decimal(10, 2)
+  sku            String   @unique
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  tag         String  // "NEW" or "BESTSELLER" — drives which homepage feed it appears in
+  ratingAvg   Float   @default(4.8)
+  ratingCount Int     @default(0)
+  soldLabel   String? // e.g. "2.1k sold" — display-only, not computed from real orders yet
+
+  materials  String?
+  sizingFit  String?
+  care       String?
+
+  // The storefront draws placeholder "photography" as a CSS gradient plus a
+  // simple line-art silhouette instead of real photos — swap in real image
+  // URLs later without changing anything else about the page.
+  gradient   String
+  silhouette String
+
+  isPinned Boolean @default(false)
+
+  variants ProductVariant[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([tag, createdAt])
+}
+
+model ProductVariant {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  color    String
+  colorHex String
+  size     String
+  sku      String @unique
+
+  stock             Int @default(0)
+  lowStockThreshold Int @default(5)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([productId, color, size])
+  @@index([productId])
+}
